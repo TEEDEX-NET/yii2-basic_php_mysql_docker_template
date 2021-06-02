@@ -1,0 +1,53 @@
+name: PHP workflow for Pushes
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  lint:
+
+    runs-on: ubuntu-latest
+    env:
+      working-directory: ./src
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup PHP 8.0
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+          extensions: :opcache, xdebug
+          tools: composer, php-cs, phpunit
+          coverage: xdebug
+
+      - name: Report PHP version
+        run: php -v
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate
+        working-directory: ${{env.working-directory}}
+
+      - name: Install dependencies
+        run: composer install
+        working-directory: ${{env.working-directory}}
+
+      - name: Lint project .php files
+        run: ./vendor/bin/phpcs .
+        working-directory: ${{env.working-directory}}
+
+      - name: Run tests and generate coverage report
+        env:
+          XDEBUG_MODE: coverage
+        run: ./vendor/bin/codecept run --coverage --coverage-xml
+        working-directory: ${{env.working-directory}}
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./src/tests/_output/coverage.xml
+          flags: tests
+          name: codecov-umbrella
+          fail_ci_if_error: false

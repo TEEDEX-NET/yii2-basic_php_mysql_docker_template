@@ -1,0 +1,14 @@
+# ENV file
+.env
+
+# MacOS
+.DS_Store
+
+# PHPStorm
+.idea/
+
+# VS Code
+.vscode
+
+# Composer
+composer.phar
